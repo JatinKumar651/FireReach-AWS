@@ -1,0 +1,19 @@
+@import "tailwindcss";
+
+@layer base {
+  body {
+    @apply bg-slate-900 text-slate-100 font-sans antialiased;
+  }
+}
+
+/* Custom scrollbar for the terminal */
+.terminal-scroll::-webkit-scrollbar {
+  width: 8px;
+}
+.terminal-scroll::-webkit-scrollbar-track {
+  background: #1e293b;
+}
+.terminal-scroll::-webkit-scrollbar-thumb {
+  background-color: #475569;
+  border-radius: 4px;
+}

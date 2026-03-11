@@ -1,0 +1,9 @@
+fastapi
+uvicorn
+sse-starlette
+groq
+httpx
+pydantic
+python-dotenv
+requests
+resend
