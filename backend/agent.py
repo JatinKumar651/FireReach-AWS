@@ -17,12 +17,12 @@ tools_schema = [
             "parameters": {
                 "type": "object",
                 "properties": {
-                    "company_name": {
+                    "name": {
                         "type": "string",
                         "description": "Name of the target company"
                     }
                 },
-                "required": ["company_name"],
+                "required": ["name"],
             },
         },
     },
@@ -30,7 +30,7 @@ tools_schema = [
         "type": "function",
         "function": {
             "name": "tool_research_analyst",
-            "description": "Calls local model to process signals and ICP into an Account Brief.",
+            "description": "Calls Groq AI to process signals and ICP into an Account Brief.",
             "parameters": {
                 "type": "object",
                 "properties": {
@@ -51,7 +51,7 @@ tools_schema = [
         "type": "function",
         "function": {
             "name": "tool_outreach_automated_sender",
-            "description": "Drafts and sends an email via Resend API.",
+            "description": "Drafts and sends an email via Gmail SMTP.",
             "parameters": {
                 "type": "object",
                 "properties": {
@@ -84,12 +84,15 @@ async def run_outreach_flow(company_name: str, icp: str, recipient: str):
     if not client:
         yield f"data: {json.dumps({'log': 'MOCK MODE: GROQ_API_KEY missing.', 'type': 'warn'})}\n\n"
         yield f"data: {json.dumps({'log': 'Step 1: Harvesting data via Mock (Tavily API bypassed)...'})}\n\n"
-        signals = tool_signal_harvester(company_name)
+        signals = tool_signal_harvester(name=company_name)
         
-        yield f"data: {json.dumps({'log': 'Step 2: Qwen 2.5 is analyzing local signals...'})}\n\n"
-        brief = await tool_research_analyst(signals, icp)
+        # Yield the extracted signals to the UI
+        yield f"data: {json.dumps({'log': 'Signals extracted successfully.', 'signals': signals.get('search_signals', [])})}\n\n"
         
-        yield f"data: {json.dumps({'log': 'Step 3: Sending email via Resend Mock...'})}\n\n"
+        yield f"data: {json.dumps({'log': 'Step 2: Analyzing signals with Groq...'})}\n\n"
+        brief = tool_research_analyst(signals, icp)
+        
+        yield f"data: {json.dumps({'log': 'Step 3: Sending email via Gmail Mock...'})}\n\n"
         result = tool_outreach_automated_sender(brief, company_name, recipient)
         
         yield f"data: {json.dumps({'log': 'Outreach flow completed (Mock Mode).', 'result': result})}\n\n"
@@ -138,29 +141,15 @@ async def run_outreach_flow(company_name: str, icp: str, recipient: str):
                     context_signals = function_response
                     
                     # Yield the extracted signals to the UI
-                    signals_dump = json.dumps(context_signals.get('search_signals', []), indent=2)
-                    yield f"data: {json.dumps({'log': f'Extracted Data:\\n{signals_dump}'})}\n\n"
+                    yield f"data: {json.dumps({'log': 'Signals extracted successfully.', 'signals': context_signals.get('search_signals', [])})}\n\n"
                     
                 elif function_name == "tool_research_analyst":
                     icp_val = arguments.get("icp", icp)
                     if not context_signals:
                         context_signals = {"company": company_name, "mode": "fallback", "search_signals": []}
                     
-                    try:
-                        yield f"data: {json.dumps({'log': 'Attempting local Ollama analysis...'})}\n\n"
-                        function_response = await tool_research_analyst(signals=context_signals, icp=icp_val)
-                    except Exception:
-                        function_response = "Error contacting local Analyst (Ollama)."
-
-                    # Fallback to Groq if local analyst failed
-                    if "Error contacting local Analyst" in str(function_response):
-                        yield f"data: {json.dumps({'log': 'Local Ollama unreachable. Falling back to Groq for analysis...', 'type': 'warn'})}\n\n"
-                        fallback_prompt = f"As a sales expert, write a 2-paragraph Account Brief highlighting pain points for {company_name} based on these signals: {json.dumps(context_signals)} and this ICP: {icp_val}. Output ONLY the brief text."
-                        fb_res = client.chat.completions.create(
-                            model="llama-3.1-8b-instant",
-                            messages=[{"role": "user", "content": fallback_prompt}]
-                        )
-                        function_response = fb_res.choices[0].message.content
+                    yield f"data: {json.dumps({'log': 'Analyzing signals with Groq...'})}\n\n"
+                    function_response = tool_research_analyst(signals=context_signals, icp=icp_val)
                 elif function_name == "tool_outreach_automated_sender":
                     function_response = tool_outreach_automated_sender(**arguments)
                     yield f"data: {json.dumps({'log': 'Final step complete.', 'result': function_response})}\n\n"

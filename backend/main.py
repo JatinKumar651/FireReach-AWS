@@ -13,7 +13,10 @@ app = FastAPI(title="FireReach Backend")
 
 app.add_middleware(
     CORSMiddleware,
-    allow_origins=["*"],
+    allow_origins=[
+        "http://localhost:5173",
+        "https://fire-reach-pearl.vercel.app"
+    ],
     allow_credentials=True,
     allow_methods=["*"],
     allow_headers=["*"],
@@ -29,7 +32,7 @@ async def get_api_status():
     keys = {
         "groq": bool(os.environ.get("GROQ_API_KEY", "").strip('"')),
         "tavily": bool(os.environ.get("TAVILY_API_KEY", "").strip('"')),
-        "resend": bool(os.environ.get("RESEND_API_KEY", "").strip('"')) and os.environ.get("RESEND_API_KEY", "").strip('"') != "your_resend_api_key_here"
+        "gmail": bool(os.environ.get("GMAIL_USER", "").strip('"') and os.environ.get("GMAIL_PASS", "").strip('"')) and os.environ.get("GMAIL_USER", "").strip('"') != "yourgmail@gmail.com"
     }
     return keys
 

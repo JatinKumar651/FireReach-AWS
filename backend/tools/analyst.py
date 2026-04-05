@@ -1,34 +1,30 @@
-import httpx
-import json
+import os
+from groq import Groq
 
-async def tool_research_analyst(signals: dict, icp: str) -> str:
+client = Groq(api_key=os.environ.get("GROQ_API_KEY"))
+
+def tool_research_analyst(signals: dict, icp: str) -> str:
     """
-    Calls local Ollama (Qwen 2.5:3b) to process signals and user ICP 
-    into a 2-paragraph "Account Brief". Timout is 60s.
+    Calls Groq API to process signals and user ICP 
+    into a 2-paragraph "Account Brief".
     """
     prompt = f"""
 You are an expert sales analyst. Based on these signals and the Ideal Customer Profile (ICP),
 write a 2-paragraph Account Brief highlighting their pain points and how we can help.
 
-Signals: {json.dumps(signals)}
+Signals: {signals}
 ICP: {icp}
 
 Output only the two paragraphs.
 """
     try:
-        async with httpx.AsyncClient(timeout=60.0) as client:
-            response = await client.post(
-                "http://localhost:11434/api/generate",
-                json={
-                    "model": "qwen2.5:3b",
-                    "prompt": prompt,
-                    "stream": False
-                }
-            )
-            response.raise_for_status()
-            result = response.json()
-            return result.get("response", "No response from model.")
+        response = client.chat.completions.create(
+            model="llama-3.1-8b-instant",
+            messages=[{"role": "user", "content": prompt}],
+            max_tokens=500,
+            temperature=0.7
+        )
+        return response.choices[0].message.content
     except Exception as e:
-        # Sanitize error string to prevent broken JSON in tool calling
         err_str = str(e).replace('"', "'").replace('\\', '')
-        return f"Error contacting local Analyst (Ollama): {err_str}"
+        return f"Error contacting Groq Analyst: {err_str}"
