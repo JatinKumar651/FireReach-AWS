@@ -26,6 +26,10 @@ class OutreachRequest(BaseModel):
     company_name: str
     icp: str
     recipient: str = "test@example.com"
+    
+@app.get("/")
+def root():
+    return {"status": "Backend is running!"}
 
 @app.get("/api/status")
 async def get_api_status():
