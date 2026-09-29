@@ -3,7 +3,7 @@ import React, { useState, useEffect, useRef, useCallback } from 'react';
 const API_BASE_URL =
   window.location.hostname === 'localhost' || window.location.hostname === '127.0.0.1'
     ? 'http://localhost:8000'
-    : 'https://firereach-1-9rf9.onrender.com';
+    : 'https://firereach-aws.onrender.com';
 
 // ── Icons ────────────────────────────────────────────────────
 const IconZap = () => (
