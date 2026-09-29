@@ -107,7 +107,7 @@ async def run_outreach_flow(company_name: str, icp: str, recipient: str):
         for i in range(5):
             yield f"data: {json.dumps({'log': 'Agent reasoning (Groq Llama 3.1 8B)...'})}\n\n"
             response = client.chat.completions.create(
-                model="llama-3.1-8b-instant",
+                model="openai/gpt-oss-120b",
                 messages=messages,
                 tools=tools_schema,
                 tool_choice="auto",
