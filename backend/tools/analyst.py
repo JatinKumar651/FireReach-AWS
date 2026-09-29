@@ -19,7 +19,7 @@ Output only the two paragraphs.
 """
     try:
         response = client.chat.completions.create(
-            model="llama-3.1-8b-instant",
+            model="openai/gpt-oss-120b",
             messages=[{"role": "user", "content": prompt}],
             max_tokens=500,
             temperature=0.7
